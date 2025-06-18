@@ -30,6 +30,8 @@ const Uploadarticles = () => {
       .catch((err) => console.error("Main category error", err));
   }, []);
 
+  console.log(selectedMain);
+  
   // Fetch Sub Categories
   useEffect(() => {
     if (selectedMain) {
@@ -52,6 +54,9 @@ const Uploadarticles = () => {
       app_thumbnail: imageone || "",
       web_thumbnail: imagetwo || ""
     };
+
+    console.log(formData);
+    
 
     try {
       await axios.post("https://tnreaders.in/mobile/upload-post", formData);
