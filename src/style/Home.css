@@ -44,3 +44,19 @@
   transform: translateY(-4px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
+
+@media only screen and (max-width: 768px) {
+  .home-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    /* max-width: 800px; */
+    margin: 10px;
+    width: 100%;
+  }
+  .home-title {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #343a40;
+  }
+}

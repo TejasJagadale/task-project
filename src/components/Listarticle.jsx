@@ -16,7 +16,7 @@ const Listarticle = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalPosts, setTotalPosts] = useState(0);
-  const postsPerPage = 20;
+  const postsPerPage = 50;
 
   const [selectedMain, setSelectedMain] = useState("");
   const [selectedSub, setSelectedSub] = useState("");
@@ -28,22 +28,27 @@ const Listarticle = () => {
   const [isSubCategoriesLoaded, setIsSubCategoriesLoaded] = useState(false);
   const [contentType, setContentType] = useState("");
   const [isEditLoading, setIsEditLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    category: "",
+    status: "",
+    contentType: "",
+    trending: ""
+  });
+
+  const [allPosts, setAllPosts] = useState([]); // Store all posts before filtering
 
   // Fetch posts with pagination
   useEffect(() => {
     fetchPosts();
-  }, [currentPage]);
+  }, []);
 
   const fetchPosts = () => {
     setIsLoading(true);
+
     axios
-      .get(
-        `https://tnreaders.in/mobile/list-posts?perPage=${postsPerPage}&currentPage=${currentPage}`
-      )
+      .get(`https://tnreaders.in/mobile/list-posts?perPage=1000&currentPage=1`) // Get all posts at once
       .then((response) => {
-        setPosts(response.data.data || []);
-        setTotalPosts(response.data.total || 0);
-        setTotalPages(response.data.last_page || 1);
+        setAllPosts(response.data.data || []);
         setIsLoading(false);
       })
       .catch((error) => {
@@ -51,6 +56,48 @@ const Listarticle = () => {
         setIsLoading(false);
       });
   };
+
+  // Apply filters to the posts
+  useEffect(() => {
+    if (allPosts.length === 0) return;
+
+    let filtered = [...allPosts];
+
+    // Apply category filter
+    if (filters.category) {
+      filtered = filtered.filter(
+        (post) => post.category.parent_id.toString() === filters.category
+      );
+    }
+
+    // Apply status filter
+    if (filters.status) {
+      filtered = filtered.filter((post) => post.isActive === filters.status);
+    }
+
+    // Apply content type filter
+    if (filters.contentType) {
+      filtered = filtered.filter(
+        (post) => post.content_type === filters.contentType
+      );
+    }
+
+    // Apply trending filter
+    if (filters.trending !== "") {
+      filtered = filtered.filter(
+        (post) => post.istrending.toString() === filters.trending
+      );
+    }
+
+    // Calculate pagination
+    const startIndex = (currentPage - 1) * postsPerPage;
+    const endIndex = startIndex + postsPerPage;
+    const paginatedPosts = filtered.slice(startIndex, endIndex);
+
+    setPosts(paginatedPosts);
+    setTotalPosts(filtered.length);
+    setTotalPages(Math.ceil(filtered.length / postsPerPage));
+  }, [allPosts, currentPage, filters]);
 
   console.log("posts", posts);
 
@@ -129,6 +176,25 @@ const Listarticle = () => {
     } finally {
       setIsEditLoading(false);
     }
+  };
+
+  const handleFilterChange = (filterName, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [filterName]: value
+    }));
+    setCurrentPage(1); // Reset to first page when filters change
+  };
+
+  // Add reset filters function
+  const resetFilters = () => {
+    setFilters({
+      category: "",
+      status: "",
+      contentType: "",
+      trending: ""
+    });
+    setCurrentPage(1);
   };
 
   const handleView = (post) => {
@@ -317,6 +383,67 @@ const Listarticle = () => {
               Add Articles
             </button>
           </div>
+          <div className="mb-4 mt-4 align-items-center d-flex flex-column flex-md-row justify-content-between">
+            <div className="col-md-3">
+              <select
+                className="form-select"
+                value={filters.category}
+                onChange={(e) => handleFilterChange("category", e.target.value)}
+              >
+                <option value="">All Categories</option>
+                {mainCategories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="col-md-2">
+              <select
+                className="form-select"
+                value={filters.status}
+                onChange={(e) => handleFilterChange("status", e.target.value)}
+              >
+                <option value="">All Statuses</option>
+                <option value="yes">Active</option>
+                <option value="no">Disabled</option>
+              </select>
+            </div>
+            <div className="col-md-2">
+              <select
+                className="form-select"
+                value={filters.contentType}
+                onChange={(e) =>
+                  handleFilterChange("contentType", e.target.value)
+                }
+              >
+                <option value="">All Content Types</option>
+                <option value="article">Article</option>
+                <option value="videos">Video</option>
+                <option value="shorts">Shorts</option>
+                {/* Add other content types as needed */}
+              </select>
+            </div>
+            <div className="col-md-2">
+              <select
+                className="form-select"
+                value={filters.trending}
+                onChange={(e) => handleFilterChange("trending", e.target.value)}
+              >
+                <option value="">All Trending</option>
+                <option value="1">Trending</option>
+                <option value="0">Not Trending</option>
+              </select>
+            </div>
+            <div className="col-md-2">
+              <button
+                className="btn btn-secondary w-100"
+                onClick={resetFilters}
+              >
+                Reset Filters
+              </button>
+            </div>
+          </div>
           <div className="row">
             {posts.length > 0 ? (
               posts.map((post) => (
@@ -325,13 +452,15 @@ const Listarticle = () => {
                     <img
                       src={post.web_thumbnail}
                       className="card-img-top"
-                      style={{ height: "300px", objectFit: "contain" }}
+                      style={{ height: "200px", objectFit: "cover" }}
                       alt={post.FullImgPath}
                       loading="lazy" // Add lazy loading
                       decoding="async" // Add async decoding
                     />
                     <div className="card-body">
-                      <h5 className="card-title">{post.title}</h5>
+                      <h5 className="card-title" style={{ fontSize: "17px" }}>
+                        {post.title}
+                      </h5>
                       <hr />
                       <div className="d-flex justify-content-between w-100">
                         <div>
@@ -341,7 +470,8 @@ const Listarticle = () => {
                               backgroundColor: "#e9ecef",
                               padding: "8px",
                               borderRadius: "5px",
-                              width: "100%"
+                              width: "100%",
+                              fontSize: "15px"
                             }}
                           >
                             {post.category.name}
@@ -349,8 +479,10 @@ const Listarticle = () => {
                         </div>
                         <div className="d-flex flex-column">
                           <div className="col-md-12">
-                            <h6>Created At</h6>
-                            <p>{new Date(post.created_at).toLocaleString()}</p>
+                            <h6 style={{ fontSize: "15px" }}>Created At</h6>
+                            <p style={{ fontSize: "15px" }}>
+                              {new Date(post.created_at).toLocaleString()}
+                            </p>
                           </div>
                         </div>
                       </div>
