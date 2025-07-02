@@ -83,7 +83,7 @@ const Uploadarticles = () => {
         <div className="form-group">
           <label className="form-label">Content Type</label>
           <div className="radio-group">
-            {["article", "shorts", "videos"].map((type) => (
+            {["article", "shorts", "video"].map((type) => (
               <label key={type} className="radio-label">
                 <input
                   type="radio"

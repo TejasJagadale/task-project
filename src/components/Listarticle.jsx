@@ -419,7 +419,7 @@ const Listarticle = () => {
               >
                 <option value="">All Content Types</option>
                 <option value="article">Article</option>
-                <option value="videos">Video</option>
+                <option value="video">Video</option>
                 <option value="shorts">Shorts</option>
                 {/* Add other content types as needed */}
               </select>
@@ -883,12 +883,12 @@ const Listarticle = () => {
                     <input
                       type="radio"
                       name="contentType"
-                      value="videos"
+                      value="video"
                       className="checking"
-                      checked={contentType === "videos"}
-                      onChange={() => setContentType("videos")}
+                      checked={contentType === "video"}
+                      onChange={() => setContentType("video")}
                     />
-                    Videos
+                    Video
                   </label>
                 </div>
               </div>
